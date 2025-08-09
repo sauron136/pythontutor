@@ -7,53 +7,33 @@ A command-line based interactive Python learning system where students:
 
 ## Quick Start
 
-### One-Command Installation
-Run this single command to install everything you need:
+### Installation
+Install directly from GitHub:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/sauron136/python-tutor/main/setup.sh | bash
+pip install git+https://github.com/sauron136/python-tutor.git
 ```
 
-This will:
-- Install Python 3, pip, git, vim, and SSH client (if not already installed)
-- Create a virtual environment at `~/python-tutor-venv/`
-- Install the `python-tutor` package and its dependencies
-- Set up SSH access to GitHub (optional but recommended)
-- Create your student workspace at `~/my_projects/`
-
 ### Start Learning
+After installation, you can run the tutor from anywhere:
+
 ```bash
-source ~/python-tutor-venv/bin/activate
-python-tutor
+pythontutor
 ```
 
 ## System Requirements
 
 - **Operating System**: Linux, macOS, or WSL on Windows
 - **Python**: 3.6 or higher
-- **Tools**: `git`, `vim`, `curl`, SSH client
+- **Tools**: `git`, `vim` (recommended for editing)
 - **Internet**: Required for package installation and GitHub integration
-
-The setup script automatically detects your OS and installs missing prerequisites on:
-- Ubuntu/Debian (apt)
-- Fedora (dnf) 
-- Arch/Manjaro (pacman)
-- openSUSE (zypper)
-- macOS (Homebrew)
 
 ## GitHub Integration
 
 The tutor includes seamless GitHub integration using SSH keys - no Personal Access Tokens needed!
 
-### Automatic SSH Setup
-During installation, the setup script will:
-1. Generate an SSH key pair (Ed25519) if you don't have one
-2. Display your public key for copying
-3. Guide you through adding it to GitHub
-4. Test the connection automatically
-
-### Manual SSH Setup
-If you skipped SSH setup during installation, you can set it up later:
+### SSH Setup
+To push your projects to GitHub, you'll need SSH keys set up:
 
 1. **Generate SSH Key** (if you don't have one):
    ```bash
@@ -113,7 +93,6 @@ Your progress is automatically saved:
 ## Directory Structure
 
 ```
-~/python-tutor-venv/          # Virtual environment
 ~/my_projects/                # Your project workspace
   ├── project_01/
   ├── project_02/
@@ -169,6 +148,20 @@ Exercises include:
 
 ## Troubleshooting
 
+### Installation Issues
+**Problem**: Command not found after installation
+**Solution**: Make sure you're using the correct command:
+```bash
+pythontutor  # Note: no dash or underscore
+```
+
+**Problem**: Module not found errors
+**Solution**: Try reinstalling:
+```bash
+pip uninstall pythontutor
+pip install git+https://github.com/sauron136/python-tutor.git
+```
+
 ### SSH Issues
 **Problem**: `Permission denied (publickey)`
 **Solution**: 
@@ -183,27 +176,29 @@ cat ~/.ssh/id_ed25519.pub
 # Make sure it's added to GitHub: https://github.com/settings/keys
 ```
 
-### Installation Issues
-**Problem**: Package not found
-**Solution**: Make sure you're in the virtual environment:
-```bash
-source ~/python-tutor-venv/bin/activate
-which python-tutor
-```
+### Project Issues
+**Problem**: Lessons not found
+**Solution**: This usually indicates a packaging issue. Try reinstalling the package.
 
-**Problem**: Permission errors on Linux
-**Solution**: The script may need sudo for system package installation.
-
-### Project Push Issues
 **Problem**: Repository doesn't exist
 **Solution**: The tutor will guide you to create it manually at https://github.com/new
+
+## Development Installation
+
+If you want to contribute or modify the code:
+
+```bash
+git clone https://github.com/sauron136/python-tutor.git
+cd python-tutor
+pip install -e .
+```
 
 ## Customization
 
 ### Adding Your Own Content
 The package structure allows easy customization:
-- Lessons: `site-packages/python_tutor/lessons/lesson_XX/`
-- Projects: `site-packages/python_tutor/projects/project_XX/`
+- Lessons: `src/python_tutor/lessons/lesson_XX/`
+- Projects: `src/python_tutor/projects/project_XX/`
 
 ### Extending the Curriculum
 Each lesson needs:
@@ -233,7 +228,3 @@ Contributions welcome! Please see our contributing guidelines and submit pull re
 ## License
 
 MIT License - see LICENSE file for details.
-
----
-
-**Note**: Replace `yourusername` in the installation command with your actual GitHub username before sharing this README.
