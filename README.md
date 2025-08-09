@@ -11,7 +11,7 @@ A command-line based interactive Python learning system where students:
 Install directly from GitHub:
 
 ```bash
-pip install git+https://github.com/sauron136/python-tutor.git
+pip install git+https://github.com/sauron136/pythontutor.git
 ```
 
 ### Start Learning
