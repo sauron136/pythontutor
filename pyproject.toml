@@ -3,7 +3,7 @@ requires = ["hatchling>=1.26"]
 build-backend = "hatchling.build"
 
 [project]
-name = "python-tutor"
+name = "pythontutor"
 version = "0.1.0"
 authors = [
   { name = "Krystian Nmeze", email = "krystianmaccs@gmail.com" },
@@ -23,15 +23,14 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/sauron136/python-tutor"
-Issues = "https://github.com/sauron136/python-tutor/issues"
+Homepage = "https://github.com/sauron136/pythontutor"
+Issues = "https://github.com/sauron136/pythontutor/issues"
 
 [project.scripts]
-python-tutor = "python_tutor.tutor:PythonTutor.main_menu"
+pythontutor = "python_tutor.tutor:main"
+
+[tool.hatch.build.targets.wheel.sources]
+"src" = ""
 
 [tool.hatch.build.targets.wheel]
-include = [
-"/src/python_tutor",
-"/lessons",
-"/projects",
-]
+packages = ["src/python_tutor"]

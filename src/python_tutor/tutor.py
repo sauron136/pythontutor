@@ -11,8 +11,6 @@ import subprocess
 import tempfile
 import importlib.util
 import importlib.resources
-import requests
-import getpass
 from typing import Dict, List, Any
 from pathlib import Path
 
@@ -21,9 +19,11 @@ class PythonTutor:
         self.current_lesson = 1
         self.current_exercise = 0
         self.progress_file = Path.home() / ".python_tutor_progress.json"
+        self.github_user_file = Path.home() / ".python_tutor_github_user"
         self.lessons_dir = Path(str(importlib.resources.files('python_tutor') / 'lessons'))
         self.projects_dir = Path(str(importlib.resources.files('python_tutor') / 'projects'))
         self.load_progress()
+        self.load_github_user()
         
     def load_progress(self):
         """Load student progress from JSON file"""
@@ -43,6 +43,20 @@ class PythonTutor:
         with open(self.progress_file, 'w') as f:
             json.dump(self.progress, f, indent=2)
     
+    def load_github_user(self):
+        """Load GitHub username from file"""
+        try:
+            with open(self.github_user_file, 'r') as f:
+                self.github_username = f.read().strip()
+        except FileNotFoundError:
+            self.github_username = None
+    
+    def save_github_user(self, username):
+        """Save GitHub username to file"""
+        self.github_username = username
+        with open(self.github_user_file, 'w') as f:
+            f.write(username)
+    
     def clear_screen(self):
         """Clear terminal screen"""
         os.system('clear' if os.name == 'posix' else 'cls')
@@ -54,6 +68,8 @@ class PythonTutor:
         print("=" * 60)
         print(f"📚 Lesson {self.current_lesson}/30")
         print(f"🏆 Projects Completed: {len(self.progress['completed_projects'])}/30")
+        if self.github_username:
+            print(f"👤 GitHub: {self.github_username}")
         print("=" * 60)
     
     def show_lesson_content(self, lesson_num: int):
@@ -267,6 +283,101 @@ class PythonTutor:
                 print(f.read())
             print("=" * 50)
     
+    def check_ssh_setup(self):
+        """Check if SSH is properly configured for GitHub"""
+        try:
+            result = subprocess.run(
+                ["ssh", "-T", "git@github.com", "-o", "ConnectTimeout=5"],
+                capture_output=True, text=True, timeout=10
+            )
+            if "successfully authenticated" in result.stderr:
+                return True
+            return False
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            return False
+    
+    def setup_github_ssh(self):
+        """Guide user through SSH setup"""
+        print("\n🔑 GITHUB SSH SETUP")
+        print("=" * 40)
+        
+        if self.check_ssh_setup():
+            print("✅ SSH is already configured for GitHub!")
+            return True
+        
+        print("SSH access to GitHub is not configured.")
+        print("\nTo set up SSH access:")
+        print("1. Generate an SSH key (if you haven't already):")
+        print("   ssh-keygen -t ed25519 -C 'your_email@example.com'")
+        print("2. Add the key to your SSH agent:")
+        print("   eval \"$(ssh-agent -s)\"")
+        print("   ssh-add ~/.ssh/id_ed25519")
+        print("3. Copy your public key:")
+        print("   cat ~/.ssh/id_ed25519.pub")
+        print("4. Add it to GitHub at: https://github.com/settings/keys")
+        print("5. Test the connection:")
+        print("   ssh -T git@github.com")
+        
+        setup_now = input("\nWould you like me to help you set this up now? (y/n): ").lower()
+        if setup_now == 'y':
+            return self.guided_ssh_setup()
+        
+        return False
+    
+    def guided_ssh_setup(self):
+        """Interactive SSH setup guide"""
+        print("\n🚀 Let's set up SSH access step by step...")
+        
+        # Check if key exists
+        ssh_dir = Path.home() / ".ssh"
+        ed25519_key = ssh_dir / "id_ed25519"
+        rsa_key = ssh_dir / "id_rsa"
+        
+        if ed25519_key.exists() or rsa_key.exists():
+            print("✅ SSH key found!")
+            key_file = ed25519_key if ed25519_key.exists() else rsa_key
+            pub_key_file = Path(str(key_file) + ".pub")
+            
+            if pub_key_file.exists():
+                print(f"📋 Your public key ({key_file.name}):")
+                with open(pub_key_file, 'r') as f:
+                    print(f.read().strip())
+        else:
+            print("🔧 No SSH key found. Let's create one...")
+            email = input("Enter your GitHub email: ")
+            if not email:
+                print("❌ Email is required.")
+                return False
+            
+            try:
+                subprocess.run([
+                    "ssh-keygen", "-t", "ed25519", "-C", email,
+                    "-f", str(ed25519_key), "-N", ""
+                ], check=True)
+                print("✅ SSH key generated!")
+                
+                with open(str(ed25519_key) + ".pub", 'r') as f:
+                    print("📋 Your public key:")
+                    print(f.read().strip())
+            except subprocess.CalledProcessError:
+                print("❌ Failed to generate SSH key.")
+                return False
+        
+        print("\n🌐 Now add this key to GitHub:")
+        print("1. Go to: https://github.com/settings/keys")
+        print("2. Click 'New SSH key'")
+        print("3. Paste the key above")
+        print("4. Give it a title and click 'Add SSH key'")
+        
+        input("\nPress Enter after adding the key to GitHub...")
+        
+        if self.check_ssh_setup():
+            print("✅ SSH setup successful!")
+            return True
+        else:
+            print("⚠️ SSH test failed. Please check your setup manually.")
+            return False
+    
     def run_project_mode(self, lesson_num: int):
         """Interactive project development mode"""
         if not self.show_project_prompt(lesson_num):
@@ -274,18 +385,15 @@ class PythonTutor:
         
         project_dir = self.setup_project_environment(lesson_num)
         
-        authenticated = False
-        username = None
-        token = None
-        
         print("\n🛠️ PROJECT DEVELOPMENT MODE")
         print("Available commands:")
-        print("  auth    - Authenticate with GitHub")
         print("  edit    - Open your project in vim")
         print("  run     - Run your project")
         print("  test    - Test your project")
         print("  submit  - Submit and move to next lesson")
-        print("  push    - Push to GitHub (requires authentication)")
+        print("  push    - Push to GitHub")
+        print("  ssh     - Setup/check SSH for GitHub")
+        print("  user    - Set GitHub username")
         print("  help    - Show this help")
         print("  quit    - Exit project mode")
         
@@ -294,17 +402,16 @@ class PythonTutor:
         while True:
             command = input(f"\n[Project {lesson_num}] >>> ").strip().lower()
             
-            if command == "auth":
+            if command == "user":
                 username = input("Enter your GitHub username: ").strip()
-                token = getpass.getpass("Enter your GitHub Personal Access Token: ").strip()
-                headers = {"Authorization": f"token {token}"}
-                response = requests.get("https://api.github.com/user", headers=headers)
-                if response.status_code == 200 and response.json().get("login") == username:
-                    authenticated = True
-                    print(f"✅ Authenticated as {username}")
+                if username:
+                    self.save_github_user(username)
+                    print(f"✅ GitHub username set to: {username}")
                 else:
-                    print(f"❌ Authentication failed: {response.json().get('message', 'Invalid credentials')}")
-                    print("💡 Create a Personal Access Token at https://github.com/settings/tokens")
+                    print("❌ Username cannot be empty.")
+            
+            elif command == "ssh":
+                self.setup_github_ssh()
             
             elif command == "edit":
                 subprocess.run(["vim", "main.py"])
@@ -331,15 +438,12 @@ class PythonTutor:
                     return True
                 
             elif command == "push":
-                if not authenticated:
-                    print("❌ Please run 'auth' to authenticate with GitHub first.")
-                else:
-                    self.push_to_github(lesson_num, username, token)
+                self.push_to_github_ssh(lesson_num)
                 
             elif command == "help":
                 print("\n🆘 HELP")
                 print("This is your project workspace. Edit main.py to complete the project.")
-                print("Make sure to authenticate with GitHub using 'auth' before pushing.")
+                print("Use 'ssh' to set up GitHub access, then 'push' to share your work.")
                 print("Follow Python best practices:")
                 print("- Use descriptive variable names")
                 print("- Add docstrings to functions")
@@ -441,8 +545,16 @@ class PythonTutor:
             print(f"❌ Error checking code quality: {e}")
             return True
     
-    def push_to_github(self, lesson_num: int, username: str, token: str):
-        """Help student push project to GitHub with authentication"""
+    def push_to_github_ssh(self, lesson_num: int):
+        """Push project to GitHub using SSH"""
+        if not self.github_username:
+            print("❌ GitHub username not set. Use 'user' command first.")
+            return
+        
+        if not self.check_ssh_setup():
+            print("❌ SSH not configured for GitHub. Use 'ssh' command first.")
+            return
+        
         print("📤 PUSH TO GITHUB")
         
         if subprocess.run(["git", "--version"], capture_output=True).returncode != 0:
@@ -450,51 +562,41 @@ class PythonTutor:
             return
         
         repo_name = f"python-tutor-project-{lesson_num:02d}"
-        repo_url = f"https://{username}:{token}@github.com/{username}/{repo_name}.git"
+        repo_url = f"git@github.com:{self.github_username}/{repo_name}.git"
         
         try:
             if not os.path.exists(".git"):
+                print("🔧 Initializing git repository...")
                 subprocess.run(["git", "init"], check=True)
                 subprocess.run(["git", "remote", "add", "origin", repo_url], check=True)
-            
-            subprocess.run(["git", "config", "user.name", username], check=True)
-            subprocess.run(["git", "config", "user.email", f"{username}@users.noreply.github.com"], check=True)
             
             subprocess.run(["git", "add", "."], check=True)
             
             commit_msg = f"Complete project {lesson_num}: {repo_name}"
             subprocess.run(["git", "commit", "-m", commit_msg], check=True)
             
-            headers = {"Authorization": f"token {token}"}
-            repo_response = requests.get(
-                f"https://api.github.com/repos/{username}/{repo_name}",
-                headers=headers
-            )
-            if repo_response.status_code == 404:
-                print(f"📁 Creating new repository: {repo_name}")
-                repo_data = {
-                    "name": repo_name,
-                    "description": f"Python Tutor Project {lesson_num}",
-                    "private": False,
-                    "auto_init": False
-                }
-                create_response = requests.post(
-                    "https://api.github.com/user/repos",
-                    headers=headers,
-                    json=repo_data
-                )
-                if create_response.status_code != 201:
-                    print(f"❌ Failed to create repository: {create_response.json().get('message')}")
-                    return
+            print(f"🚀 Pushing to {repo_url}...")
+            result = subprocess.run(["git", "push", "-u", "origin", "main"], 
+                                  capture_output=True, text=True)
             
-            subprocess.run(["git", "push", "-u", "origin", "main"], check=True)
-            
-            print(f"✅ Successfully pushed to {repo_url}")
-            print(f"🌐 View your project at: https://github.com/{username}/{repo_name}")
+            if result.returncode == 0:
+                print(f"✅ Successfully pushed to GitHub!")
+                print(f"🌐 View your project at: https://github.com/{self.github_username}/{repo_name}")
+            else:
+                if "does not exist" in result.stderr or "repository not found" in result.stderr:
+                    print(f"⚠️ Repository doesn't exist. Creating it...")
+                    create_repo = input(f"Create repository '{repo_name}' on GitHub? (y/n): ")
+                    if create_repo.lower() == 'y':
+                        print("🌐 Please create the repository manually at:")
+                        print(f"   https://github.com/new")
+                        print(f"   Repository name: {repo_name}")
+                        print("   Then run 'push' again.")
+                else:
+                    print(f"❌ Push failed: {result.stderr}")
         
         except subprocess.CalledProcessError as e:
             print(f"❌ Git error: {e}")
-            print("💡 Ensure your repository exists and you have write permissions.")
+            print("💡 Make sure your repository exists and you have write permissions.")
         except Exception as e:
             print(f"❌ Error: {e}")
     
@@ -509,10 +611,11 @@ class PythonTutor:
             print("2. 🎯 Practice Exercises")
             print("3. 🚀 Work on Project")
             print("4. 📊 View Progress")
-            print("5. 🔄 Reset Progress")
-            print("6. ❌ Exit")
+            print("5. ⚙️ Settings")
+            print("6. 🔄 Reset Progress")
+            print("7. ❌ Exit")
             
-            choice = input("\nChoose an option (1-6): ").strip()
+            choice = input("\nChoose an option (1-7): ").strip()
             
             if choice == "1":
                 self.run_lesson_flow()
@@ -529,6 +632,8 @@ class PythonTutor:
                 self.show_progress()
                 input("\nPress Enter to continue...")
             elif choice == "5":
+                self.settings_menu()
+            elif choice == "6":
                 confirm = input("Are you sure you want to reset all progress? (y/n): ")
                 if confirm.lower() == 'y':
                     self.progress = {
@@ -537,11 +642,61 @@ class PythonTutor:
                         "completed_projects": [],
                         "exercise_attempts": {}
                     }
+                    self.current_lesson = 1
                     self.save_progress()
                     print("✅ Progress reset!")
                 input("Press Enter to continue...")
-            elif choice == "6":
+            elif choice == "7":
                 print("👋 Happy coding! See you next time!")
+                break
+            else:
+                print("❌ Invalid choice. Please try again.")
+                input("Press Enter to continue...")
+    
+    def settings_menu(self):
+        """Settings and configuration menu"""
+        while True:
+            self.clear_screen()
+            print("⚙️ SETTINGS")
+            print("=" * 30)
+            print(f"GitHub Username: {self.github_username or 'Not set'}")
+            print(f"SSH Status: {'✅ Configured' if self.check_ssh_setup() else '❌ Not configured'}")
+            print()
+            print("1. 👤 Set GitHub Username")
+            print("2. 🔑 Setup SSH for GitHub")
+            print("3. 🧪 Test SSH Connection")
+            print("4. 📁 Open Projects Folder")
+            print("5. 🔙 Back to Main Menu")
+            
+            choice = input("\nChoose an option (1-5): ").strip()
+            
+            if choice == "1":
+                username = input("Enter your GitHub username: ").strip()
+                if username:
+                    self.save_github_user(username)
+                    print(f"✅ GitHub username set to: {username}")
+                input("Press Enter to continue...")
+            elif choice == "2":
+                self.setup_github_ssh()
+                input("Press Enter to continue...")
+            elif choice == "3":
+                if self.check_ssh_setup():
+                    print("✅ SSH connection to GitHub successful!")
+                else:
+                    print("❌ SSH connection failed. Run SSH setup first.")
+                input("Press Enter to continue...")
+            elif choice == "4":
+                projects_dir = Path.home() / "my_projects"
+                print(f"📁 Projects folder: {projects_dir}")
+                if projects_dir.exists():
+                    try:
+                        subprocess.run(["xdg-open", str(projects_dir)])
+                    except:
+                        print("💡 You can manually navigate to this folder")
+                else:
+                    print("⚠️ Projects folder doesn't exist yet. Complete a project first!")
+                input("Press Enter to continue...")
+            elif choice == "5":
                 break
             else:
                 print("❌ Invalid choice. Please try again.")
@@ -578,7 +733,7 @@ class PythonTutor:
         if self.progress['completed_projects']:
             print(f"Projects Completed: {', '.join(map(str, self.progress['completed_projects']))}")
 
-if __name__ == "__main__":
+def main():
     tutor = PythonTutor()
     try:
         tutor.main_menu()
@@ -587,3 +742,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n❌ An error occurred: {e}")
         print("Please report this issue!")
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,4 @@
+python-tutor-venv/
+test-env/
+*.pyc
+__pycache__/
