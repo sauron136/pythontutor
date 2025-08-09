@@ -1,0 +1,42 @@
+[
+  {
+    "prompt": "Create a variable called 'name' and assign your actual name to it as a string.",
+    "example": "name = \"John\"",
+    "expected_vars": {
+      "name": "str"
+    },
+    "hint": "Remember to put quotes around text values!"
+  },
+  {
+    "prompt": "Create a variable called 'age' and assign your age to it as an integer.",
+    "example": "age = 25",
+    "expected_vars": {
+      "age": "int"
+    },
+    "hint": "Integers are whole numbers without quotes."
+  },
+  {
+    "prompt": "Create a variable called 'height' and assign your height in feet as a float (decimal).",
+    "example": "height = 5.8",
+    "expected_vars": {
+      "height": "float"
+    },
+    "hint": "Use a decimal point for float values."
+  },
+  {
+    "prompt": "Create a variable called 'is_learning_python' and set it to True.",
+    "example": "is_learning_python = True",
+    "expected_vars": {
+      "is_learning_python": "bool"
+    },
+    "hint": "Boolean values are True or False (capital T and F, no quotes)."
+  },
+  {
+    "prompt": "Now print your name variable to see its value.",
+    "example": "print(name)",
+    "expected_vars": {
+      "name": "str"
+    },
+    "hint": "Use the print() function with your variable name inside the parentheses."
+  }
+]

@@ -1,0 +1,37 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "python-tutor"
+version = "0.1.0"
+authors = [
+  { name = "Krystian Nmeze", email = "krystianmaccs@gmail.com" },
+]
+description = "An interactive Python learning shell with lessons and projects"
+readme = "README.md"
+requires-python = ">=3.6"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: Unix",
+  "License :: OSI Approved :: MIT License",
+]
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = [
+  "requests>=2.28.0",  # For GitHub API integration
+]
+
+[project.urls]
+Homepage = "https://github.com/sauron136/python-tutor"
+Issues = "https://github.com/sauron136/python-tutor/issues"
+
+[project.scripts]
+python-tutor = "python_tutor.tutor:PythonTutor.main_menu"
+
+[tool.hatch.build.targets.wheel]
+include = [
+"/src/python_tutor",
+"/lessons",
+"/projects",
+]

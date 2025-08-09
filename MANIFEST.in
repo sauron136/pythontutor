@@ -1,0 +1,5 @@
+include README.md
+include LICENSE
+include setup.sh
+recursive-include lessons *.md *.json
+recursive-include projects *.md *.py *.json

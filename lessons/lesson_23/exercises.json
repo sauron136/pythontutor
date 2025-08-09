@@ -1,0 +1,10 @@
+[
+  {
+    "prompt": "[Your exercise prompt here]",
+    "example": "[Show example code]",
+    "expected_vars": {
+      "variable_name": "str"
+    },
+    "hint": "[Helpful hint for students]"
+  }
+]
