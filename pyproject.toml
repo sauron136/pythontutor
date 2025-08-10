@@ -19,7 +19,9 @@ classifiers = [
 license = "MIT"
 license-files = ["LICENSE"]
 dependencies = [
-  "requests>=2.28.0",  # For GitHub API integration
+  "requests>=2.28.0", # For GitHub API integration
+  "flake8>=6.0.0",
+  "pycodestyle>=2.10.0",
 ]
 
 [project.urls]
