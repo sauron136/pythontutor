@@ -1,42 +1,68 @@
 [
   {
-    "prompt": "Create a variable called 'name' and assign your actual name to it as a string.",
-    "example": "name = \"John\"",
-    "expected_vars": {
-      "name": "str"
-    },
-    "hint": "Remember to put quotes around text values!"
+    "question": "Create a variable called 'python_version' and assign it the string value '3.12'",
+    "expected_type": "code",
+    "expected_value": "python_version = '3.12'",
+    "hints": [
+      "Remember to use quotes for string values",
+      "Variable names use snake_case in Python",
+      "The format is: variable_name = 'value'"
+    ],
+    "explanation": "Great! You've created a string variable. Strings are always enclosed in quotes (single or double)."
   },
   {
-    "prompt": "Create a variable called 'age' and assign your age to it as an integer.",
-    "example": "age = 25",
-    "expected_vars": {
-      "age": "int"
-    },
-    "hint": "Integers are whole numbers without quotes."
+    "question": "Write a line of code that prints the python_version variable you just created",
+    "expected_type": "code", 
+    "expected_value": "print(python_version)",
+    "hints": [
+      "Use the print() function",
+      "Put the variable name inside the parentheses",
+      "Don't use quotes around the variable name when printing it"
+    ],
+    "explanation": "Perfect! When you print a variable, you use its name without quotes. The quotes are only needed when creating string values."
   },
   {
-    "prompt": "Create a variable called 'height' and assign your height in feet as a float (decimal).",
-    "example": "height = 5.8",
-    "expected_vars": {
-      "height": "float"
-    },
-    "hint": "Use a decimal point for float values."
+    "question": "Create a variable called 'num_students' with the integer value 25",
+    "expected_type": "code",
+    "expected_value": "num_students = 25", 
+    "hints": [
+      "Integers don't need quotes",
+      "Use snake_case for variable names with multiple words",
+      "Just assign the number directly"
+    ],
+    "explanation": "Excellent! Integer variables store whole numbers without quotes. Python automatically knows this is an integer."
   },
   {
-    "prompt": "Create a variable called 'is_learning_python' and set it to True.",
-    "example": "is_learning_python = True",
-    "expected_vars": {
-      "is_learning_python": "bool"
-    },
-    "hint": "Boolean values are True or False (capital T and F, no quotes)."
+    "question": "Create a variable called 'average_grade' with the float value 87.5",
+    "expected_type": "code",
+    "expected_value": "average_grade = 87.5",
+    "hints": [
+      "Float values have decimal points",
+      "No quotes needed for numbers",
+      "The decimal point makes it a float, not an integer"
+    ],
+    "explanation": "Great work! Floats are numbers with decimal points. They're perfect for measurements, averages, and prices."
   },
   {
-    "prompt": "Now print your name variable to see its value.",
-    "example": "print(name)",
-    "expected_vars": {
-      "name": "str"
-    },
-    "hint": "Use the print() function with your variable name inside the parentheses."
+    "question": "Create a boolean variable called 'is_learning' and set it to True",
+    "expected_type": "code", 
+    "expected_value": "is_learning = True",
+    "hints": [
+      "Boolean values are True or False",
+      "Note the capital T in True",
+      "No quotes around boolean values"
+    ],
+    "explanation": "Perfect! Boolean variables can only be True or False. They're great for yes/no, on/off type information."
+  },
+  {
+    "question": "Write a print statement that displays all three variables in one line, separated by commas",
+    "expected_type": "code",
+    "expected_value": "print(num_students, average_grade, is_learning)",
+    "hints": [
+      "You can print multiple variables by separating them with commas",
+      "Use the variable names, not their values",
+      "The format is: print(var1, var2, var3)"
+    ],
+    "explanation": "Excellent! You can print multiple variables by separating them with commas. Python automatically adds spaces between them."
   }
 ]
